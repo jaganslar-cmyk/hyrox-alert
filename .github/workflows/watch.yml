@@ -42,13 +42,17 @@ jobs:
             python watch.py
           fi
 
-      - name: Persist state if changed
+      - name: Persist state only when the alert has fired
         if: always()
         run: |
-          if ! git diff --quiet -- state.json; then
-            git config user.name "hyrox-watch-bot"
-            git config user.email "bot@users.noreply.github.com"
-            git add state.json
-            git commit -m "state: registration detected, alert fired"
-            git push
+          # Commit state.json ONLY once registration was detected (notified=true),
+          # so we don't create a commit on every routine "not open" check.
+          if grep -q '"notified": true' state.json; then
+            if ! git diff --quiet -- state.json; then
+              git config user.name "hyrox-watch-bot"
+              git config user.email "bot@users.noreply.github.com"
+              git add state.json
+              git commit -m "state: registration detected, alert fired"
+              git push
+            fi
           fi
