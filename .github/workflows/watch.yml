@@ -1,0 +1,54 @@
+name: HYROX Bengaluru 2027 watcher
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub may delay scheduled runs under load; fine here.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run detection only, do not send"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write   # allow committing state.json back on a fire
+
+concurrency:
+  group: hyrox-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run watcher
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python watch.py --dry-run
+          else
+            python watch.py
+          fi
+
+      - name: Persist state if changed
+        if: always()
+        run: |
+          if ! git diff --quiet -- state.json; then
+            git config user.name "hyrox-watch-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add state.json
+            git commit -m "state: registration detected, alert fired"
+            git push
+          fi
