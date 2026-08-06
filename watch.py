@@ -289,10 +289,12 @@ def main() -> int:
         print(f"[{now}] {line}")
 
     if not is_open and not force_test:
-        # Record the check but do not alert.
-        state.setdefault("history", []).append({"ts": now, "open": False})
-        state["history"] = state["history"][-50:]
-        save_state(state)
+        # Record the check but do not alert. Skip persistence on dry-run so it
+        # stays purely read-only.
+        if not dry_run:
+            state.setdefault("history", []).append({"ts": now, "open": False})
+            state["history"] = state["history"][-50:]
+            save_state(state)
         print(f"[{now}] Registration not open yet.")
         return 0
 
