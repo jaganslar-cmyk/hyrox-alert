@@ -1,4 +1,9 @@
 {
   "notified": false,
-  "history": []
+  "history": [
+    {
+      "ts": "2026-08-06T14:12:51.527046+00:00",
+      "open": false
+    }
+  ]
 }
