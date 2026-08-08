@@ -2,8 +2,14 @@ name: HYROX Bengaluru 2027 watcher
 
 on:
   schedule:
-    # Every 15 minutes. GitHub may delay scheduled runs under load; fine here.
-    - cron: "*/15 * * * *"
+    # Baseline cadence. NOTE: GitHub heavily throttles scheduled runs, so this
+    # lands at roughly every ~2h regardless of the interval requested. That is
+    # our Aug–early-Oct cadence and a permanent fallback. For TIGHT (~15 min)
+    # cadence near the open date, an external scheduler (e.g. cron-job.org) pings
+    # the repository_dispatch trigger below every 15 min during the tight window.
+    - cron: "0 */2 * * *"
+  repository_dispatch:
+    types: [poll]
   workflow_dispatch:
     inputs:
       dry_run:
